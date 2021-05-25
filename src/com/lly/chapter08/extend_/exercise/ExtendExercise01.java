@@ -2,6 +2,11 @@ package com.lly.chapter08.extend_.exercise;
 
 public class ExtendExercise01 {
     public static void main(String[] args) {
+        /*输出
+        * a
+        * b name
+        * b
+        */
         B b = new B();
     }
 }
