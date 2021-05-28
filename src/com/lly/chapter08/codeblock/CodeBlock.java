@@ -16,6 +16,7 @@ class A {
     int n2 = getInt2();
 
     {
+        System.out.println(n2);
         System.out.println("A类普通代码块调用");
     }
 
@@ -46,6 +47,7 @@ class B extends A {
     int n4 = getInt2();
 
     {
+        System.out.println(n4);
         System.out.println("B类普通代码块调用");
     }
 
