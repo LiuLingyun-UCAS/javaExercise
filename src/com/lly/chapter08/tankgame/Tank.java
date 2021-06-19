@@ -8,14 +8,18 @@ package com.lly.chapter08.tankgame;
 public class Tank {
     private int x;
     private int y;
+    private int xMax;
+    private int yMax;
     private Direction direct;
     private int speed;
 
-    public Tank(int x, int y, Direction direct, int speed) {
+    public Tank(int x, int y, Direction direct, int speed, int xMax, int yMax) {
         this.x = x;
         this.y = y;
         this.direct = direct;
         this.speed = speed;
+        this.xMax = xMax;
+        this.yMax = yMax;
     }
 
     public void moveUp() {
@@ -24,9 +28,9 @@ public class Tank {
     }
 
 
-    public void moveDown(int height) {
+    public void moveDown() {
         y += speed;
-        y = Math.min(y, height - 60);
+        y = Math.min(y, yMax - 60);
     }
 
 
@@ -36,9 +40,9 @@ public class Tank {
     }
 
 
-    public void moveRight(int width) {
+    public void moveRight() {
         x += speed;
-        x = Math.min(x, width - 60);
+        x = Math.min(x, xMax - 60);
     }
 
     public int getSpeed() {
@@ -71,5 +75,21 @@ public class Tank {
 
     public void setY(int y) {
         this.y = y;
+    }
+
+    public int getXMax() {
+        return xMax;
+    }
+
+    public void setXMax(int xMax) {
+        this.xMax = xMax;
+    }
+
+    public int getYMax() {
+        return yMax;
+    }
+
+    public void setYMax(int yMax) {
+        this.yMax = yMax;
     }
 }

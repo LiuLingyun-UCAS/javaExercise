@@ -4,15 +4,17 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.Iterator;
 import java.util.Vector;
 
 /**
  * @author 刘凌云
  * @version 1.0
  */
-public class MyPlane extends JPanel implements KeyListener {
+public class MyPlane extends JPanel implements KeyListener, Runnable {
     private MyTank myTank;
     private Vector<EnemyTank> enemyTanks = new Vector<>();
+    private Vector<Shot> myShots = new Vector<>();
     private int enemyTankNum = 3;
     private int width;
     private int height;
@@ -20,9 +22,9 @@ public class MyPlane extends JPanel implements KeyListener {
     public MyPlane() {
         width = 1000;
         height = 750;
-        myTank = new MyTank(200, 200, Direction.UP, 10);
-        for (int i = 0; i < enemyTankNum; i++){
-            enemyTanks.add(new EnemyTank((i + 1) * 100, 0, Direction.DOWN, 2));
+        myTank = new MyTank(200, 200, Direction.UP, 10, width, height);
+        for (int i = 0; i < enemyTankNum; i++) {
+            enemyTanks.add(new EnemyTank((i + 1) * 100, 0, Direction.DOWN, 2, width, height));
         }
     }
 
@@ -32,6 +34,18 @@ public class MyPlane extends JPanel implements KeyListener {
         g.fillRect(0, 0, width, height);
         //画坦克
         drawTank(myTank.getX(), myTank.getY(), g, myTank.getDirect(), MyTank.TYPE);
+        //画子弹
+        Iterator<Shot> it = myShots.iterator();
+        while (it.hasNext()) {
+            Shot next = it.next();
+            if (next != null) {
+                if(next.isLive()) {
+                    drawShot(next.getX(), next.getY(), g, next.getDirect());
+                } else {
+                    it.remove();
+                }
+            }
+        }
         for (EnemyTank enemyTank : enemyTanks) {
             drawTank(enemyTank.getX(), enemyTank.getY(), g,
                     enemyTank.getDirect(), EnemyTank.TYPE);
@@ -56,7 +70,7 @@ public class MyPlane extends JPanel implements KeyListener {
                 g.setColor(Color.YELLOW);
                 break;
         }
-        switch (direct){
+        switch (direct) {
             case UP: //up
                 g.fill3DRect(x, y, 10, 60, false);
                 g.fill3DRect(x + 30, y, 10, 60, false);
@@ -91,38 +105,71 @@ public class MyPlane extends JPanel implements KeyListener {
 
     }
 
+    public void drawShot(int x, int y, Graphics g, Direction direct){
+        g.setColor(Color.YELLOW);
+        switch (direct) {
+            case UP:
+                g.fill3DRect(x, y - 6, 2, 6, false);
+                break;
+            case RIGHT:
+                g.fill3DRect(x, y, 6, 2, false);
+                break;
+            case LEFT:
+                g.fill3DRect(x - 6, y, 6, 2, false);
+                break;
+            case DOWN:
+                g.fill3DRect(x, y, 2, 6, false);
+                break;
+        }
+    }
+
     @Override
     public void keyTyped(KeyEvent e) {
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        switch (e.getKeyChar()){
-            case 'w':
-            case 'W':
+        switch (e.getKeyCode()){
+            case KeyEvent.VK_W:
                 myTank.setDirect(Direction.UP);
                 myTank.moveUp();
                 break;
-            case 's':
-            case 'S':
+            case KeyEvent.VK_S:
                 myTank.setDirect(Direction.DOWN);
-                myTank.moveDown(height);
+                myTank.moveDown();
                 break;
-            case 'a':
-            case 'A':
+            case KeyEvent.VK_A:
                 myTank.setDirect(Direction.LEFT);
                 myTank.moveLeft();
                 break;
-            case 'd':
-            case 'D':
+            case KeyEvent.VK_D:
                 myTank.setDirect(Direction.RIGHT);
-                myTank.moveRight(width);
+                myTank.moveRight();
                 break;
+        }
+
+        if (e.getKeyCode() == KeyEvent.VK_J) {
+            myTank.shotTank();
+            if(myTank.getShot() != null){
+                myShots.add(myTank.getShot());
+            }
         }
         repaint();
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            repaint();
+        }
     }
 }

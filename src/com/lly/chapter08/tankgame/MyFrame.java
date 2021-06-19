@@ -16,6 +16,7 @@ public class MyFrame extends JFrame {
 
     public MyFrame(){
         myPlane = new MyPlane();
+        new Thread(myPlane).start();
         add(myPlane);
         addKeyListener(myPlane);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
