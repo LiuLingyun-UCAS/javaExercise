@@ -30,6 +30,7 @@ public class Shot implements Runnable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+            //System.out.println(x + " " + y);
             switch (direct) {
                 case UP:
                     y -= speed;
@@ -44,7 +45,7 @@ public class Shot implements Runnable {
                     x += speed;
                     break;
             }
-            if(x < 0 || x > xMax || y < 0 || y > yMax){
+            if(x < 0 || x > xMax || y < 0 || y > yMax || !isLive){
                 isLive = false;
                 break;
             }

@@ -1,5 +1,7 @@
 package com.lly.chapter08.tankgame;
 
+import java.util.Vector;
+
 /**
  * @author 刘凌云
  * @version 1.0
@@ -12,6 +14,8 @@ public class Tank {
     private int yMax;
     private Direction direct;
     private int speed;
+    private Vector<Shot> shots = new Vector<>();
+    private boolean isLive = true;
 
     public Tank(int x, int y, Direction direct, int speed, int xMax, int yMax) {
         this.x = x;
@@ -43,6 +47,26 @@ public class Tank {
     public void moveRight() {
         x += speed;
         x = Math.min(x, xMax - 60);
+    }
+
+    public void shotTank(){
+        Shot shot = null;
+        switch (getDirect()){
+            case UP:
+                shot = new Shot(getX() + 20, getY(), Direction.UP, 10, getXMax(), getYMax());
+                break;
+            case DOWN:
+                shot = new Shot(getX() + 20, getY() + 60, Direction.DOWN, 10, getXMax(), getYMax());
+                break;
+            case LEFT:
+                shot = new Shot(getX() , getY() + 20, Direction.LEFT, 10, getXMax(), getYMax());
+                break;
+            case RIGHT:
+                shot = new Shot(getX() + 60, getY() + 20, Direction.RIGHT, 10, getXMax(), getYMax());
+                break;
+        }
+        new Thread(shot).start();
+        shots.add(shot);
     }
 
     public int getSpeed() {
@@ -91,5 +115,17 @@ public class Tank {
 
     public void setYMax(int yMax) {
         this.yMax = yMax;
+    }
+
+    public Vector<Shot> getShots() {
+        return shots;
+    }
+
+    public boolean isLive() {
+        return isLive;
+    }
+
+    public void setLive(boolean live) {
+        isLive = live;
     }
 }
