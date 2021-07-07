@@ -21,7 +21,7 @@ public class MyFrame extends JFrame {
         add(myPlane);
         addKeyListener(myPlane);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(1015, 788);
+        setSize(1300, 788);
         setVisible(true);
     }
 }

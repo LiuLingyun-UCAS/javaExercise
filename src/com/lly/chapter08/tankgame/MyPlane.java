@@ -5,8 +5,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Random;
 import java.util.Vector;
 
 /**
@@ -17,32 +19,35 @@ import java.util.Vector;
 public class MyPlane extends JPanel implements KeyListener, Runnable {
     private MyTank myTank;
     private Vector<EnemyTank> enemyTanks = new Vector<>();
-    private int enemyTankNum = 3;
-    private int width;
-    private int height;
+    private int enemyTankNum = 5;
+    private int tankAreaWidth;
+    private int tankAreaHeight;
     private Vector<Boom> booms = new Vector<>();
     private Vector<Image> boomImages = new Vector<>();
+    private Recorder recorder = new Recorder();
 
     public MyPlane() throws IOException {
-        width = 1000;
-        height = 750;
-        myTank = new MyTank(200, 200, Direction.UP, 10, width, height);
+        tankAreaWidth = 1000;
+        tankAreaHeight = 750;
+        myTank = new MyTank(200, 200, Direction.UP, 10, this);
         for (int i = 0; i < enemyTankNum; i++) {
-            EnemyTank enemyTank = new EnemyTank((i + 1) * 200, 300, Direction.DOWN, 2, width, height);
+            EnemyTank enemyTank = new EnemyTank((i + 1) * 70, 300, Direction.DOWN, 2, this);
             enemyTanks.add(enemyTank);
-            new Thread(enemyTank).start();
         }
-        for (int i = 0; i < 11; i++){
-            boomImages.add(ImageIO.read(Panel.class.getResource("/image/" + i + ".gif")));
+        for (int i = 0; i < 11; i++) {
+            boomImages.add(ImageIO.read(new File("image\\" + i + ".gif")));
         }
     }
 
     @Override
     public void paint(Graphics g) {
         super.paint(g);
-        g.fillRect(0, 0, width, height);
+        g.fillRect(0, 0, tankAreaWidth, tankAreaHeight);
+        drawScoreArea(g);
         //画坦克
-        drawTank(myTank.getX(), myTank.getY(), g, myTank.getDirect(), MyTank.TYPE);
+        if (myTank.isLive()) {
+            drawTank(myTank.getX(), myTank.getY(), g, myTank.getDirect(), MyTank.TYPE);
+        }
         //画子弹
         drawShot(myTank.getShots(), g, Color.YELLOW);
         Iterator<EnemyTank> enemyTankIterator = enemyTanks.iterator();
@@ -60,18 +65,26 @@ public class MyPlane extends JPanel implements KeyListener, Runnable {
 
     }
 
-    public void drawBoom(Graphics g){
+    public void drawScoreArea(Graphics g) {
+        g.setFont(new Font("宋体", Font.BOLD, 25));
+        g.setColor(Color.BLACK);
+        g.drawString("您累积击毁敌方坦克", tankAreaWidth + 20, 30);
+        g.setFont(new Font("宋体", Font.BOLD, 40));
+        g.drawString(recorder.getHitEnemyCount() + "", tankAreaWidth + 70, 105);
+        drawTank(tankAreaWidth + 20, 60, g, Direction.UP, 0);
+    }
+
+    public void drawBoom(Graphics g) {
         Iterator<Boom> boomIterator = booms.iterator();
         while (boomIterator.hasNext()) {
             Boom boom = boomIterator.next();
-            if(boom.isLive()) {
+            if (boom.isLive()) {
                 int x = boom.getX();
                 int y = boom.getY();
                 int index = 10 - boom.getLife();
                 g.drawImage(boomImages.get(index), x, y, 60, 60, this);
                 boom.lifeDown();
-            }
-            else{
+            } else {
                 boomIterator.remove();
             }
         }
@@ -161,7 +174,29 @@ public class MyPlane extends JPanel implements KeyListener, Runnable {
         }
     }
 
-    public void hitTank(Shot s, Tank tank) {
+    public void hitEnemyTank() {
+        Iterator<Shot> myShotsIt = myTank.getShots().iterator();
+        while (myShotsIt.hasNext()) {
+            Shot shot = myShotsIt.next();
+            Iterator<EnemyTank> tanksIt = enemyTanks.iterator();
+            while (tanksIt.hasNext()) {
+                EnemyTank tank = tanksIt.next();
+                if (hitTank(shot, tank)) recorder.hitEnemy();
+            }
+        }
+    }
+
+    public void hitMyTank() {
+        if (myTank.isLive()) {
+            for (EnemyTank enemyTank : enemyTanks) {
+                for (Shot shot : enemyTank.getShots()) {
+                    hitTank(shot, myTank);
+                }
+            }
+        }
+    }
+
+    public boolean hitTank(Shot s, Tank tank) {
         int sx = s.getX();
         int sy = s.getY();
         int tx = tank.getX();
@@ -176,6 +211,7 @@ public class MyPlane extends JPanel implements KeyListener, Runnable {
                             s.setLive(false);
                             tank.setLive(false);
                             booms.add(new Boom(tx, ty));
+                            return true;
                         }
                         break;
                     case LEFT:
@@ -184,6 +220,7 @@ public class MyPlane extends JPanel implements KeyListener, Runnable {
                             s.setLive(false);
                             tank.setLive(false);
                             booms.add(new Boom(tx, ty));
+                            return true;
                         }
                         break;
                 }
@@ -197,6 +234,7 @@ public class MyPlane extends JPanel implements KeyListener, Runnable {
                             s.setLive(false);
                             tank.setLive(false);
                             booms.add(new Boom(tx, ty));
+                            return true;
                         }
                         break;
                     case LEFT:
@@ -205,11 +243,13 @@ public class MyPlane extends JPanel implements KeyListener, Runnable {
                             s.setLive(false);
                             tank.setLive(false);
                             booms.add(new Boom(tx, ty));
+                            return true;
                         }
                         break;
                 }
                 break;
         }
+        return false;
     }
 
     @Override
@@ -218,29 +258,36 @@ public class MyPlane extends JPanel implements KeyListener, Runnable {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        switch (e.getKeyCode()) {
-            case KeyEvent.VK_W:
-                myTank.setDirect(Direction.UP);
-                myTank.moveUp();
-                break;
-            case KeyEvent.VK_S:
-                myTank.setDirect(Direction.DOWN);
-                myTank.moveDown();
-                break;
-            case KeyEvent.VK_A:
-                myTank.setDirect(Direction.LEFT);
-                myTank.moveLeft();
-                break;
-            case KeyEvent.VK_D:
-                myTank.setDirect(Direction.RIGHT);
-                myTank.moveRight();
-                break;
-        }
+        if (myTank.isLive()) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.VK_W:
+                    myTank.setDirect(Direction.UP);
+                    myTank.moveUp();
+                    break;
+                case KeyEvent.VK_S:
+                    myTank.setDirect(Direction.DOWN);
+                    myTank.moveDown();
+                    break;
+                case KeyEvent.VK_A:
+                    myTank.setDirect(Direction.LEFT);
+                    myTank.moveLeft();
+                    break;
+                case KeyEvent.VK_D:
+                    myTank.setDirect(Direction.RIGHT);
+                    myTank.moveRight();
+                    break;
+            }
 
-        if (e.getKeyCode() == KeyEvent.VK_J) {
-            myTank.shotTank();
+            if (e.getKeyCode() == KeyEvent.VK_J) {
+                myTank.shotTank();
+            }
         }
-        repaint();
+    }
+
+    public void enemyTanksMoveAndFire() {
+        for (EnemyTank enemyTank : enemyTanks) {
+            enemyTank.moveAndFire();
+        }
     }
 
     @Override
@@ -249,22 +296,51 @@ public class MyPlane extends JPanel implements KeyListener, Runnable {
 
     @Override
     public void run() {
+        int count = 0;
+        Random r = new Random();
         while (true) {
             try {
-                Thread.sleep(40);
+                Thread.sleep(20);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            Iterator<Shot> myShotsIt = myTank.getShots().iterator();
-            while (myShotsIt.hasNext()) {
-                Shot shot = myShotsIt.next();
-                Iterator<EnemyTank> tanksIt = enemyTanks.iterator();
-                while (tanksIt.hasNext()) {
-                    EnemyTank tank = tanksIt.next();
-                    hitTank(shot, tank);
-                }
+            count++;
+            hitEnemyTank();
+            hitMyTank();
+            if (count == 5) {
+                enemyTanksMoveAndFire();
+                count = 0;
             }
             repaint();
         }
     }
+
+    public MyTank getMyTank() {
+        return myTank;
+    }
+
+    public Vector<EnemyTank> getEnemyTanks() {
+        return enemyTanks;
+    }
+
+    public int getEnemyTankNum() {
+        return enemyTankNum;
+    }
+
+    public int getTankAreaWidth() {
+        return tankAreaWidth;
+    }
+
+    public int getTankAreaHeight() {
+        return tankAreaHeight;
+    }
+
+    public Vector<Boom> getBooms() {
+        return booms;
+    }
+
+    public Vector<Image> getBoomImages() {
+        return boomImages;
+    }
+
 }

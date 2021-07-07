@@ -7,19 +7,17 @@ package com.lly.chapter08.tankgame;
 public class Shot implements Runnable {
     private int x;//子弹x坐标
     private int y;//子弹y坐标
-    private int xMax;
-    private int yMax;
     private Direction direct;
     private int speed = 2;
     private boolean isLive = true;
+    private MyPlane container;
 
-    public Shot(int x, int y, Direction direct, int speed, int xMax, int yMax) {
+    public Shot(int x, int y, Direction direct, int speed, MyPlane container) {
         this.x = x;
         this.y = y;
-        this.xMax = xMax;
-        this.yMax = yMax;
         this.direct = direct;
         this.speed = speed;
+        this.container = container;
     }
 
     @Override
@@ -45,7 +43,7 @@ public class Shot implements Runnable {
                     x += speed;
                     break;
             }
-            if(x < 0 || x > xMax || y < 0 || y > yMax || !isLive){
+            if(x < 0 || x > container.getTankAreaWidth() || y < 0 || y > container.getTankAreaHeight() || !isLive){
                 isLive = false;
                 break;
             }
